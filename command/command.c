@@ -4,13 +4,30 @@
 #include <stdint.h>
 
 #include "../buffer/inputbuff.h"
-#include "../structure/rowstruct.h"
+#include "../structure/dbstructure.h"
 #include "command.h"
 
 
+// Simple tokenizer to split string into words
+char** tokenizeInput(const char* input, int* tokenCount) {
+    char* copy = strdup(input);
+    int count = 0;
+    char* tokens[64]; // max 64 tokens per command
+    char* tok = strtok(copy, " \n");
+    while (tok != NULL) {
+        tokens[count++] = strdup(tok);
+        tok = strtok(NULL, " \n");
+    }
+    char** result = malloc(sizeof(char*) * (count + 1));
+    for (int i = 0; i < count; i++) result[i] = tokens[i];
+    result[count] = NULL;
+    *tokenCount = count;
+    free(copy);
+    return result;
+}
 
 MetaCommandResult doMetaCommand(InputBuffer* inputBuffer) {
-    if (strcmp(inputBuffer -> buffer, ".exit") == 0) {
+    if (strcmp(inputBuffer->buffer, ".exit") == 0) {
         closeInputBuffer(inputBuffer);
         exit(EXIT_SUCCESS);
     }
@@ -20,29 +37,46 @@ MetaCommandResult doMetaCommand(InputBuffer* inputBuffer) {
 }
 
 PrepareResult prepareStatement(InputBuffer* inputBuffer, Statement* statement) {
-    if (strncmp(inputBuffer -> buffer, "insert", 6) == 0) {
-        statement -> type = STATEMENT_INSERT;
-         // simple parsing: "insert id username email"
-        int id = 0;
-        char username[USERNAME_SIZE];
-        char email[EMAIL_SIZE];
-        int n = sscanf(inputBuffer->buffer, "insert %d %31s %254s", &id, username, email);
-        if (n < 3) {
+    int tokenCount = 0;
+    PrepareResult prepareResult = NULL;
+    char** tokens = tokenizeInput(inputBuffer->buffer, &tokenCount);
+    
+    if (strcmp(tokens[0], "insert") == 0) {
+        if (tokenCount < 3) {
             printf("Syntax error. Use: insert <id> <username> <email>\n");
             return PREPARE_UNRECOGNIZED_STATEMENT; // failure
         }
-        statement->rowToInsert.id = (uint32_t)id;
-        strncpy(statement->rowToInsert.username, username, USERNAME_SIZE);
-        strncpy(statement->rowToInsert.email, email, EMAIL_SIZE);
-        return PREPARE_SUCCESS;
+        statement->type = STATEMENT_INSERT;
+        statement->tableName = strdup(tokens[1]);
+        statement->values = malloc(sizeof(char*) * (tokenCount - 1));
+        for (int i = 2; i < tokenCount; i++) {
+            statement->values[i-2] = strdup(tokens[i]);
+        }
+        statement->values[tokenCount-2] = NULL;        
+        prepareResult = PREPARE_SUCCESS;
     }
-    if (strcmp(inputBuffer -> buffer, "select") == 0) {
-        statement -> type = STATEMENT_SELECT;
-        return PREPARE_SUCCESS;
+    if (strcmp(tokens[0], "select") == 0) {
+        if (tokenCount != 2) { 
+            printf("Error: SELECT requires table name\n"); return -1; 
+        }
+        statement->type = STATEMENT_SELECT;
+        statement->tableName = strdup(tokens[1]);
+        statement->values = NULL;
+        prepareResult = PREPARE_SUCCESS;
     }
-
-    return PREPARE_UNRECOGNIZED_STATEMENT;
+    else {
+        statement->type = STATEMENT_UNKNOWN;
+        statement->tableName = NULL;
+        statement->values = NULL;
+        prepareResult = PREPARE_UNRECOGNIZED_STATEMENT;
+    }
+    
+    // free temporary tokens array
+    for (int i = 0; i < tokenCount; i++) free(tokens[i]);
+    free(tokens);
+    return prepareResult;
 }
+
 
 void executeStatement(Statement* statement) {
     switch (statement->type) {

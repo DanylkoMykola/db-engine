@@ -15,12 +15,14 @@ typedef enum {
 
 typedef enum {
     STATEMENT_INSERT,
-    STATEMENT_SELECT
+    STATEMENT_SELECT,
+    STATEMENT_UNKNOWN
 } StetmentType;
 
 typedef struct {
     StetmentType type;
-    Row rowToInsert; // used only for INSERT
+    char* tableName;
+    char** values;
 } Statement;
 
 MetaCommandResult doMetaCommand(InputBuffer* inputBuffer);

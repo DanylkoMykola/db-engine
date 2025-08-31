@@ -3,11 +3,34 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "structure/rowstruct.h"
+#include "structure/dbstructure.h"
 #include "buffer/inputbuff.h"
-#include "command/command.h"
 
-int main(int argc, char* argv[]) {
+
+
+int main() {
+    Database* db = createDatabase();
+
+    Column columns[2] = {
+        {"id", COL_INT},
+        {"name", COL_TEXT}
+    };
+
+    Table* users = createTable("users", 2, columns);
+    printf("Created table: %s with %d columns\n", users->name, users->numColumns);
+
+    for (int i = 0; i < users->numColumns; i++) {
+        printf("  %s (%s)\n",
+               users->columns[i].name,
+               users->columns[i].type == COL_INT ? "INT" : "TEXT");
+    }
+
+    freeTable(users);
+    freeDatabase(db);
+    return 0;
+}
+
+/* int main(int argc, char* argv[]) {
     InputBuffer* inputBuffer = newInputBuffer();
     while (1) {
         printPromt();
@@ -38,4 +61,4 @@ int main(int argc, char* argv[]) {
         executeStatement(&statement);
         printf("Executed.\n");
     }
-}
+} */
