@@ -1,0 +1,11 @@
+# VSCode
+.vscode/
+*.code-workspace
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.o
+*.exe
+*.db
