@@ -27,4 +27,4 @@ typedef struct {
 
 MetaCommandResult doMetaCommand(InputBuffer* inputBuffer);
 PrepareResult prepareStatement(InputBuffer* inputBuffer, Statement* statement);
-void executeStatement(Statement* statement);
+void executeStatement(Statement* statement, Database* database);

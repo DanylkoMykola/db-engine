@@ -21,6 +21,7 @@ void freeDatabase(Database* database) {
 }
 
 Table* createTable(const char* name, int numColumns, Column* columns) {
+    // TODO write table in file
     Table* table = malloc(sizeof(Table));
     table -> name = strdup(name);
     table -> numColumns = numColumns;

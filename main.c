@@ -5,32 +5,11 @@
 
 #include "structure/dbstructure.h"
 #include "buffer/inputbuff.h"
+#include "command/command.h"
 
 
-
-int main() {
-    Database* db = createDatabase();
-
-    Column columns[2] = {
-        {"id", COL_INT},
-        {"name", COL_TEXT}
-    };
-
-    Table* users = createTable("users", 2, columns);
-    printf("Created table: %s with %d columns\n", users->name, users->numColumns);
-
-    for (int i = 0; i < users->numColumns; i++) {
-        printf("  %s (%s)\n",
-               users->columns[i].name,
-               users->columns[i].type == COL_INT ? "INT" : "TEXT");
-    }
-
-    freeTable(users);
-    freeDatabase(db);
-    return 0;
-}
-
-/* int main(int argc, char* argv[]) {
+ int main(int argc, char* argv[]) {
+    Database* database = createDatabase();
     InputBuffer* inputBuffer = newInputBuffer();
     while (1) {
         printPromt();
@@ -58,7 +37,7 @@ int main() {
                 continue;
             }
 
-        executeStatement(&statement);
+        executeStatement(&statement, database);
         printf("Executed.\n");
     }
-} */
+}
